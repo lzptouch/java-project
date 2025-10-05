@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.product.mapper.ProductDetailMapper">
+    
+    <resultMap id="ProductDetailResultMap" type="com.example.product.entity.ProductDetail">
+        <id column="id" property="id"/>
+        <result column="product_id" property="productId"/>
+        <result column="detail_content" property="detailContent"/>
+        <result column="params" property="params"/>
+        <result column="package_list" property="packageList"/>
+        <result column="after_sale_desc" property="afterSaleDesc"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+    
+    <select id="selectByProductId" resultMap="ProductDetailResultMap">
+        SELECT * FROM product_detail
+        WHERE product_id = #{productId} AND deleted = 0
+    </select>
+    
+    <delete id="deleteByProductId">
+        UPDATE product_detail
+        SET deleted = 1
+        WHERE product_id = #{productId}
+    </delete>
+</mapper>

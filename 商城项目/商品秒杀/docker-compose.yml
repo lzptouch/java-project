@@ -1,0 +1,122 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-seckill
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=seckill
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./seckill.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql-data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    networks:
+      - seckill-network
+
+  # Redis缓存
+  redis:
+    image: redis:6.2
+    container_name: redis-seckill
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: always
+    networks:
+      - seckill-network
+
+  # RabbitMQ消息队列
+  rabbitmq:
+    image: rabbitmq:3.9-management
+    container_name: rabbitmq-seckill
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    restart: always
+    networks:
+      - seckill-network
+
+  # Nacos注册中心和配置中心
+  nacos:
+    image: nacos/nacos-server:2.1.0
+    container_name: nacos-seckill
+    ports:
+      - "8848:8848"
+    environment:
+      - MODE=standalone
+      - SPRING_DATASOURCE_PLATFORM=mysql
+      - MYSQL_SERVICE_HOST=mysql
+      - MYSQL_SERVICE_PORT=3306
+      - MYSQL_SERVICE_DB_NAME=nacos_config
+      - MYSQL_SERVICE_USER=root
+      - MYSQL_SERVICE_PASSWORD=root
+    restart: always
+    networks:
+      - seckill-network
+
+  # Seata分布式事务
+  seata:
+    image: seataio/seata-server:1.6.1
+    container_name: seata-seckill
+    ports:
+      - "8091:8091"
+    environment:
+      - SEATA_IP=seata
+      - SEATA_PORT=8091
+      - STORE_MODE=db
+      - DB_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - DB_URL=jdbc:mysql://mysql:3306/seata?useUnicode=true&characterEncoding=utf8&useSSL=false
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+    restart: always
+    networks:
+      - seckill-network
+
+  # 秒杀服务
+  seckill-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: seckill-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+      - nacos
+      - seata
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/seckill?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+      - SPRING_REDIS_HOST=redis
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848
+      - SEATA_REGISTRY_TYPE=nacos
+      - SEATA_REGISTRY_NACOS_SERVER_ADDR=nacos:8848
+      - SEATA_CONFIG_TYPE=nacos
+      - SEATA_CONFIG_NACOS_SERVER_ADDR=nacos:8848
+    restart: always
+    networks:
+      - seckill-network
+
+# 网络配置
+networks:
+  seckill-network:
+    driver: bridge
+
+# 数据卷配置
+volumes:
+  mysql-data:
+  redis-data:
+  rabbitmq-data:

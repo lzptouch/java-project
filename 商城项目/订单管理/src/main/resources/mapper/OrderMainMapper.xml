@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.order.mapper.OrderMainMapper">
+
+    <select id="selectOrderList" resultType="com.example.order.entity.OrderMain">
+        SELECT
+            om.*
+        FROM
+            order_main om
+        <where>
+            <if test="query.userId != null">
+                AND om.user_id = #{query.userId}
+            </if>
+            <if test="query.status != null">
+                AND om.status = #{query.status}
+            </if>
+            <if test="query.startTime != null">
+                AND om.create_time >= #{query.startTime}
+            </if>
+            <if test="query.endTime != null">
+                AND om.create_time <= #{query.endTime}
+            </if>
+        </where>
+        ORDER BY
+            om.create_time DESC
+        LIMIT #{query.pageSize}
+        OFFSET #{query.pageNum-1} * #{query.pageSize}
+    </select>
+
+    <select id="selectOrderDetailByOrderId" resultMap="OrderDetailResultMap">
+        SELECT
+            om.*
+        FROM
+            order_main om
+        WHERE
+            om.order_id = #{orderId}
+    </select>
+
+    <update id="updateOrderStatus">
+        UPDATE
+            order_main
+        SET
+            status = #{status},
+            update_time = NOW()
+        WHERE
+            order_id = #{orderId}
+            <if test="oldStatus != null">
+                AND status = #{oldStatus}
+            </if>
+    </update>
+
+    <select id="selectTimeoutOrders" resultType="com.example.order.entity.OrderMain">
+        SELECT
+            *
+        FROM
+            order_main
+        WHERE
+            status = 1
+            AND create_time < DATE_SUB(NOW(), INTERVAL #{timeoutMinutes} MINUTE)
+    </select>
+
+    <!-- 订单详情结果映射 -->
+    <resultMap id="OrderDetailResultMap" type="com.example.order.entity.OrderMain">
+        <id property="orderId" column="order_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="payAmount" column="pay_amount"/>
+        <result property="status" column="status"/>
+        <result property="payTime" column="pay_time"/>
+        <result property="shipTime" column="ship_time"/>
+        <result property="receiveTime" column="receive_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        
+        <!-- 关联订单明细 -->
+        <collection property="orderItems" ofType="com.example.order.entity.OrderItem" 
+                   select="com.example.order.mapper.OrderItemMapper.selectByOrderId" 
+                   column="order_id"/>
+        
+        <!-- 关联支付记录 -->
+        <association property="payment" ofType="com.example.order.entity.OrderPayment" 
+                    select="com.example.order.mapper.OrderPaymentMapper.selectByOrderId" 
+                    column="order_id"/>
+        
+        <!-- 关联售后记录 -->
+        <association property="afterSale" ofType="com.example.order.entity.OrderAfterSale" 
+                    select="com.example.order.mapper.OrderAfterSaleMapper.selectByOrderId" 
+                    column="order_id"/>
+    </resultMap>
+
+</mapper>

@@ -1,0 +1,102 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: product-service
+  
+  # 数据库配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/product_service?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+  
+  # Redis配置
+  redis:
+    host: localhost
+    port: 6379
+    password: 
+    database: 0
+    timeout: 3000
+    lettuce:
+      pool:
+        max-active: 10
+        max-wait: -1
+        max-idle: 8
+        min-idle: 0
+  
+  # RabbitMQ配置
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    listener:
+      simple:
+        concurrency: 1
+        max-concurrency: 10
+        prefetch: 1
+        acknowledge-mode: auto
+  
+  # 服务发现配置
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        namespace: public
+        group: DEFAULT_GROUP
+        service: ${spring.application.name}
+
+# MyBatis-Plus配置
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.product.entity
+  global-config:
+    db-config:
+      id-type: auto
+      field-strategy: NOT_NULL
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    call-setters-on-nulls: true
+
+# 日志配置
+logging:
+  level:
+    root: info
+    com.example.product: debug
+  file:
+    name: logs/product-service.log
+    max-size: 10MB
+    max-history: 7
+
+# Knife4j(Swagger)配置
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    enable-version: false
+  document:
+    title: 商品管理API文档
+    description: 商品管理微服务接口文档
+    version: 1.0.0
+
+# 自定义配置
+product:
+  cache:
+    enabled: true
+    expire-time: 3600  # 缓存过期时间（秒）
+  page:
+    default-page-size: 10
+    max-page-size: 100

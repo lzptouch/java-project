@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.product.mapper.ProductSpecMapper">
+    
+    <resultMap id="ProductSpecResultMap" type="com.example.product.entity.ProductSpec">
+        <id column="id" property="id"/>
+        <result column="product_id" property="productId"/>
+        <result column="spec_name" property="specName"/>
+        <result column="spec_value" property="specValue"/>
+        <result column="price" property="price"/>
+        <result column="stock" property="stock"/>
+        <result column="sales" property="sales"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="spec_code" property="specCode"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+    
+    <select id="selectByProductId" resultMap="ProductSpecResultMap">
+        SELECT * FROM product_spec
+        WHERE product_id = #{productId} AND deleted = 0
+    </select>
+    
+    <insert id="batchInsert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product_spec (
+            product_id, spec_name, spec_value, price, 
+            stock, sales, image_url, spec_code, 
+            create_time, update_time, deleted
+        ) VALUES
+        <foreach collection="list" item="spec" separator=",">
+            (
+                #{spec.productId}, #{spec.specName}, #{spec.specValue}, #{spec.price}, 
+                #{spec.stock}, #{spec.sales}, #{spec.imageUrl}, #{spec.specCode}, 
+                NOW(), NOW(), 0
+            )
+        </foreach>
+    </insert>
+    
+    <delete id="deleteByProductId">
+        UPDATE product_spec
+        SET deleted = 1
+        WHERE product_id = #{productId}
+    </delete>
+</mapper>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.order.mapper.OrderPaymentMapper">
+
+    <select id="selectByOrderId" resultType="com.example.order.entity.OrderPayment">
+        SELECT
+            *
+        FROM
+            order_payment
+        WHERE
+            order_id = #{orderId}
+    </select>
+
+    <select id="selectByPayNo" resultType="com.example.order.entity.OrderPayment">
+        SELECT
+            *
+        FROM
+            order_payment
+        WHERE
+            pay_no = #{payNo}
+    </select>
+
+    <update id="updatePaymentStatus">
+        UPDATE
+            order_payment
+        SET
+            status = #{status},
+            pay_no = #{payNo},
+            callback_time = #{callbackTime},
+            update_time = NOW()
+        WHERE
+            id = #{id}
+    </update>
+
+</mapper>

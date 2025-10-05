@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.order.mapper.OrderAfterSaleMapper">
+
+    <select id="selectByOrderId" resultType="com.example.order.entity.OrderAfterSale">
+        SELECT
+            *
+        FROM
+            order_after_sale
+        WHERE
+            order_id = #{orderId}
+    </select>
+
+    <select id="selectByAfterSaleNo" resultType="com.example.order.entity.OrderAfterSale">
+        SELECT
+            *
+        FROM
+            order_after_sale
+        WHERE
+            after_sale_no = #{afterSaleNo}
+    </select>
+
+    <update id="updateAfterSaleStatus">
+        UPDATE
+            order_after_sale
+        SET
+            status = #{status},
+            update_time = NOW()
+        WHERE
+            id = #{id}
+    </update>
+
+</mapper>

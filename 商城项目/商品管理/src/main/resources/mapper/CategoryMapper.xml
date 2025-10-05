@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.product.mapper.CategoryMapper">
+    
+    <resultMap id="CategoryResultMap" type="com.example.product.entity.Category">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="level" property="level"/>
+        <result column="icon" property="icon"/>
+        <result column="weight" property="weight"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+    
+    <select id="selectEnabledCategories" resultMap="CategoryResultMap">
+        SELECT * FROM category
+        WHERE deleted = 0 AND status = 1
+        ORDER BY level, weight DESC, id ASC
+    </select>
+    
+    <select id="selectByParentId" resultMap="CategoryResultMap">
+        SELECT * FROM category
+        WHERE deleted = 0 AND parent_id = #{parentId}
+        ORDER BY weight DESC, id ASC
+    </select>
+    
+    <select id="selectCategoryTree" resultType="com.example.product.entity.Category">
+        WITH RECURSIVE category_tree AS (
+            SELECT * FROM category
+            WHERE deleted = 0 AND parent_id = 0
+            UNION ALL
+            SELECT c.* FROM category c
+            JOIN category_tree ct ON c.parent_id = ct.id
+            WHERE c.deleted = 0
+        )
+        SELECT * FROM category_tree
+        ORDER BY level, weight DESC, id ASC
+    </select>
+</mapper>

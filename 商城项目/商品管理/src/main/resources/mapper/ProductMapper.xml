@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.product.mapper.ProductMapper">
+    
+    <resultMap id="ProductResultMap" type="com.example.product.entity.Product">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="price" property="price"/>
+        <result column="stock" property="stock"/>
+        <result column="sales" property="sales"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="status" property="status"/>
+        <result column="weight" property="weight"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+    
+    <resultMap id="ProductDetailResultMap" type="com.example.product.entity.Product" extends="ProductResultMap">
+        <association property="category" column="category_id" select="com.example.product.mapper.CategoryMapper.selectById"/>
+    </resultMap>
+    
+    <select id="selectProductPage" resultMap="ProductResultMap">
+        SELECT * FROM product
+        WHERE deleted = 0
+        <if test="query.name != null and query.name != ''">
+            AND name LIKE CONCAT('%', #{query.name}, '%')
+        </if>
+        <if test="query.categoryId != null">
+            AND category_id = #{query.categoryId}
+        </if>
+        <if test="query.minPrice != null">
+            AND price >= #{query.minPrice}
+        </if>
+        <if test="query.maxPrice != null">
+            AND price <= #{query.maxPrice}
+        </if>
+        <if test="query.status != null">
+            AND status = #{query.status}
+        </if>
+        <if test="query.sortBy != null and query.sortBy != ''">
+            <choose>
+                <when test="query.sortBy == 'price'">
+                    ORDER BY price
+                </when>
+                <when test="query.sortBy == 'sales'">
+                    ORDER BY sales
+                </when>
+                <when test="query.sortBy == 'createTime'">
+                    ORDER BY create_time
+                </when>
+                <otherwise>
+                    ORDER BY weight DESC, create_time DESC
+                </otherwise>
+            </choose>
+            <if test="query.sortOrder != null and query.sortOrder == 'asc'">
+                ASC
+            </if>
+            <if test="query.sortOrder == null or query.sortOrder == 'desc'">
+                DESC
+            </if>
+        </if>
+        <if test="query.sortBy == null or query.sortBy == ''">
+            ORDER BY weight DESC, create_time DESC
+        </if>
+    </select>
+    
+    <select id="selectProductDetailById" resultMap="ProductDetailResultMap">
+        SELECT * FROM product
+        WHERE id = #{id} AND deleted = 0
+    </select>
+    
+    <update id="deductStock">
+        UPDATE product
+        SET stock = stock - #{quantity}
+        WHERE id = #{id} AND stock >= #{quantity} AND deleted = 0
+    </update>
+    
+    <update id="addStock">
+        UPDATE product
+        SET stock = stock + #{quantity}
+        WHERE id = #{id} AND deleted = 0
+    </update>
+    
+    <update id="updateSales">
+        UPDATE product
+        SET sales = sales + #{quantity}
+        WHERE id = #{id} AND deleted = 0
+    </update>
+</mapper>
